@@ -68,18 +68,26 @@ def scan():
 		os.system('pyrit -i '+diccionario+' import_passwords')
 	else:
 		diccionario=1
-	os.system("ifconfig")
-	wlan=input("Introduzca Wlan: ")
-	print("Procesando")
-	os.system('airmon-ng check kill')
-	os.system('ifconfig '+wlan+' down')
-	os.system('iwconfig wlan0 mode monitor')
-	os.system('macchanger -A '+wlan)
-	os.system('ifconfig '+wlan+' up') 
-	os.system('airmon-ng start '+wlan)
-	if(wlan!='wlan0mon'): #falta condicion or
-		os.system('airmon-ng start '+wlan)
-	print(wlan)	
+		os.system("ifconfig")
+		wlan=input("Introduzca Wlan: ")
+		if(wlan=="wlan0mon" or wlan== "wlan1mon"):
+			wlan=wlan
+		else:
+			print("Procesando")
+			os.system('ifconfig '+wlan+' down')
+			time.sleep(1)
+			os.system('macchanger -A '+wlan)
+			time.sleep(1)
+			os.system('ifconfig '+wlan+' up') 
+			time.sleep(1)
+			os.system('airmon-ng check kill')
+			time.sleep(1)
+			os.system('airmon-ng start '+wlan)
+			time.sleep(1)
+			os.system('airmon-ng check '+wlan)
+			time.sleep(1)
+			wlan=(wlan+"mon")
+	print(wlan)
 	return bssid,canal,diccionario, wlan
 
 def attack(wlan,bssid,canal):
